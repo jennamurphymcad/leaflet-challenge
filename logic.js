@@ -8,6 +8,9 @@ d3.json(queryUrl).then(function(data) {
   console.log(data.features);
 });
 
+
+
+
 function createFeatures(earthquakeData) {
 
   // Define a function we want to run once for each feature in the features array
@@ -15,36 +18,65 @@ function createFeatures(earthquakeData) {
   function onEachFeature(feature, layer) {
 
     layer.bindPopup("<h3>" + feature.properties.place +
-      "</h3><hr><p>" + new Date(feature.properties.time) + "</p>");
+      "</h3><hr><p>" + new Date(feature.properties.time) + "</p>" + 
+      "<p> Magnitude: " + (feature.properties.mag) + "</p>"
+      + "<p> Depth: " + (feature.geometry.coordinates[2]) + "</p>");
   }
-      var color = "white"
 
-      function getColor(feature.properties.geometry.coordinates[3]) {
-        if (feature.properties.geometry.coordinates[3]] >= 15) {
-          color = "#355E3B"
-        } else if (earthquakeData.features.feature.geometry.coordinates[3] >= 10) {
-          color = "#008000";
-        } else if (earthquakeData.features.feature.geometry.coordinates[3] >= 5) {
-          color = "#4CBB17"
-        } else {
-          color = "#90EE90"
-        }
-      };
-      
-  
+    function getValue(x) {
+      return  x >=10 ? "#006700" :
+              x >= 8 ? "#008000" :
+              x >= 6 ? "#009a00" :
+              x >= 4 ? "#00b300" :
+              x >= 2 ? "#00cd00" :
+                 "#00e600";
+      }
 
+    function style(feature) {
+      return {
+        radius: 8, 
+        fillOpacity: .75, 
+        color: "#00ff00", 
+        radius: feature.properties.mag * 2.5,
+        fillColor: getValue(feature.geometry.coordinates[2]),
+        weight: 1,}; 
+      }
 
-
-  var earthquakes = L.geoJson(earthquakeData, {
+    var earthquakes = L.geoJson(earthquakeData, {
       pointToLayer: function (feature, latlng) {
-      return new L.CircleMarker(latlng, {radius: 8, 
-                                          fillOpacity: 1, 
-                                          color: 'black', 
-                                          fillColor: getColor(feature.properties.geometry.coordinates[3]),
-                                          weight: 1,});
+        return new L.CircleMarker(latlng, style(feature))  
       },
-      onEachFeature: onEachFeature
-  });
+       onEachFeature: onEachFeature
+   });
+ 
+
+
+
+
+  //     var earthquakes = L.geoJson(earthquakeData, {
+  //      pointToLayer: function (feature, latlng) {
+  //       return new L.CircleMarker(latlng,  {radius: 8, 
+  //                                         fillOpacity: 1, 
+  //                                         color: 'black', 
+  //                                         radius: feature.properties.mag * 2,
+  //                                         // fillColor: color,
+  //                                         weight: 1,});
+  //     },
+  //     onEachFeature: onEachFeature
+  // });
+
+
+  
+  
+  //   // Add circles to map
+  //   L.circleMarker(countries[i].location, {
+  //     fillOpacity: 0.75,
+  //     color: "white",
+  //     fillColor: color,
+  //     // Adjust radius
+  //     radius: countries[i].points / 7.5
+  //   }).bindPopup("<h1>" + countries[i].name + "</h1> <hr> <h3>Points: " + countries[i].points + "</h3>").addTo(myMap);
+  // }
   
   // Create a GeoJSON layer containing the features array on the earthquakeData object
   // Run the onEachFeature function once for each piece of data in the array
@@ -152,6 +184,26 @@ function createMap(earthquakes) {
   L.control.layers(baseMaps, overlayMaps, {
     collapsed: false
   }).addTo(myMap);
+
+  var legend = L.control({position: 'bottomright'});
+  legend.onAdd = function (myMap) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+         grades = [0, 10, 20, 50, 100, 200, 500, 1000],
+        labels = [];
+
+   // loop through our density intervals and generate a label with a colored square for each interval
+   for (var i = 0; i < grades.length; i++) {
+       div.innerHTML +=
+           '<i style="background:' + getValue(grades[i] + 1) + '"></i> ' +
+           grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+     }
+
+     return div;
+  };
+
+  legend.addTo(myMap);
+
 }
 
 
